@@ -1,25 +1,29 @@
 package main
 
 import (
-	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
 )
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
+	var folderPath string
+	var folderName string
+	var projectName string
 
-	fmt.Print("Enter the folder path (or '.' for the current directory): ")
-	folderPath, _ := reader.ReadString('\n')
-	folderPath = strings.TrimSpace(folderPath)
+	flag.StringVar(&folderPath, "path", ".", "Folder path (or '.' for the current directory)")
+	flag.StringVar(&folderName, "name", "", "Folder name")
+	flag.StringVar(&projectName, "project", "", "Project name")
+	flag.Parse()
 
-	fmt.Print("Enter the folder name: ")
-	folderName, _ := reader.ReadString('\n')
-	folderName = strings.TrimSpace(folderName)
+	if folderName == "" || projectName == "" {
+		fmt.Println("Usage: qs -name <folder_name> -project <project_name>")
+		return
+	}
 
-	fullPath := folderPath + "/" + folderName
+	fullPath := filepath.Join(folderPath, folderName)
 
 	err := os.MkdirAll(fullPath, 0755)
 	if err != nil {
@@ -42,8 +46,6 @@ func main() {
 	}
 	fmt.Println("Git repository initialized.")
 
-	fmt.Print("Enter project name: ")
-	projectName, _ := reader.ReadString('\n')
 	readmeContent := "# " + projectName
 
 	err = os.WriteFile("README.md", []byte(readmeContent), 0644)
@@ -51,4 +53,5 @@ func main() {
 		fmt.Println("Error creating README.md:", err)
 		return
 	}
+	fmt.Println("README.md created successfully.")
 }
