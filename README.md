@@ -1,6 +1,6 @@
 # QuickStart
 
-QuickStart is a **git** wrapper. It allows users to create a new project folder, initialize a Git repository, and generate a basic README.md file for their project.
+QuickStart accelerates project setup by automating folder creation, Git initialization, and README/LICENSE generation based on user-defined parameters. It streamlines the process, ensuring a consistent and well-documented project structure. Finally, it opens the project in Visual Studio Code.
 
 To build the CLI executable, run the following command in the project directory:
 
