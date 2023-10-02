@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 )
 
@@ -13,7 +14,7 @@ func main() {
 	var folderName string
 	var projectName string
 
-	flag.StringVar(&folderPath, "path", ".", "Folder path (or '.' for the current directory)")
+	flag.StringVar(&folderPath, "path", "", "Folder path (leave empty for the current directory)")
 	flag.StringVar(&folderName, "name", "", "Folder name")
 	flag.StringVar(&projectName, "project", "", "Project name")
 	flag.Parse()
@@ -23,25 +24,34 @@ func main() {
 		return
 	}
 
+	if folderPath == "" {
+		currentUser, err := user.Current()
+		if err != nil {
+			handleError("Error getting user information", err)
+			return
+		}
+		folderPath = filepath.Join(currentUser.HomeDir, "Documents")
+	}
+
 	fullPath := filepath.Join(folderPath, folderName)
 
 	err := os.MkdirAll(fullPath, 0755)
 	if err != nil {
-		fmt.Println("Error making folder:", err)
+		handleError("Error creating folder", err)
 		return
 	}
 	fmt.Println("Folder created successfully.")
 
 	err = os.Chdir(fullPath)
 	if err != nil {
-		fmt.Println("Error changing directory:", err)
+		handleError("Error changing directory", err)
 		return
 	}
 
 	cmd := exec.Command("git", "init")
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("Error initializing Git:", err)
+		handleError("Error initializing Git", err)
 		return
 	}
 	fmt.Println("Git repository initialized.")
@@ -50,8 +60,22 @@ func main() {
 
 	err = os.WriteFile("README.md", []byte(readmeContent), 0644)
 	if err != nil {
-		fmt.Println("Error creating README.md:", err)
+		handleError("Error creating README.md", err)
 		return
 	}
 	fmt.Println("README.md created successfully.")
+
+	cmd = exec.Command("code", ".")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		handleError(fmt.Sprintf("Error opening %s in VS Code", projectName), err)
+		return
+	}
+	fmt.Printf("Opening %s in VS Code\n", projectName)
+}
+
+func handleError(message string, err error) {
+	fmt.Printf("%s: %v\n", message, err)
 }
