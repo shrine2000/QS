@@ -17,7 +17,7 @@ sudo mv qs /usr/local/bin
 Now, `qs` command can be used as 
 
 ```shell
-qs -name my-app -path /path/to/directory -project "My App"
+qs -name my-app -project "My App"
 ```
 
 

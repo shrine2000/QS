@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -81,6 +82,45 @@ func main() {
 	}
 	fmt.Println("LICENSE file created successfully.")
 
+	ides := findIDEs()
+	if len(ides) > 0 {
+		fmt.Println("Installed IDEs:")
+		i := 1
+		for ideExec, ideName := range ides {
+			fmt.Printf("%d. %s (%s)\n", i, ideName, ideExec)
+			i++
+		}
+
+		fmt.Printf("Enter the number of the IDE to open: ")
+
+		reader := bufio.NewReader(os.Stdin)
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("Error reading input: %v\n", err)
+			return
+		}
+
+		choice := strings.TrimSpace(input)
+		if choice == "" {
+			fmt.Println("Invalid input. Please enter a number.")
+			return
+		}
+
+		print(ides)
+		ideExecutable, exists := ides[choice]
+		if !exists {
+			fmt.Println("Invalid choice.")
+			return
+		}
+
+		fmt.Printf("Opening %s...\n", ides[fmt.Sprintf("ide%d", choice)])
+		openIDE(fmt.Sprintf("ide%d", choice), fullPath)
+
+		fmt.Printf("Opening %s...\n", ideExecutable)
+	} else {
+		fmt.Println("No known IDEs found.")
+	}
+
 	cmd = exec.Command("code", ".")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -126,4 +166,32 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`
+}
+
+func findIDEs() map[string]string {
+	ideExecutables := map[string]string{
+		"code":    "Visual Studio Code",
+		"pycharm": "PyCharm",
+		"subl":    "Sublime Text",
+		"atom":    "Atom",
+	}
+
+	installedIDEs := make(map[string]string)
+
+	for ideExec := range ideExecutables {
+		path, err := exec.LookPath(ideExec)
+		if err == nil {
+			installedIDEs[ideExec] = path
+		}
+	}
+
+	return installedIDEs
+}
+
+func openIDE(ideExecutable, projectPath string) {
+	cmd := exec.Command(ideExecutable, projectPath)
+	err := cmd.Start()
+	if err != nil {
+		fmt.Printf("Error opening IDE: %v\n", err)
+	}
 }
