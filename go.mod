@@ -1,3 +1,3 @@
-module QuickStart
+module qs
 
 go 1.21
